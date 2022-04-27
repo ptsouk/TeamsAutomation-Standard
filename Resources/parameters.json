@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "teams_1_Connection_Name": {
+          "value": "teams"
+        },
+        "teams_1_Connection_DisplayName": {
+          "value": "MDEBot@panoslab.onmicrosoft.com"
+        },
+        "teams_1_token:TenantId": {
+          "value": "a6e09f1d-1f05-497b-b499-da099ced752f"
+        },
+        "wdatp_1_Connection_Name": {
+          "value": "wdatp"
+        },
+        "wdatp_1_Connection_DisplayName": {
+          "value": "wdatpSPN"
+        },
+        "wdatp_1_token:clientId": {
+          "value": "8a08d5d6-4b53-40b5-895c-a52376ceba49"
+        },
+        "wdatp_1_token:clientSecret": {
+          "reference": {
+            "keyVault": {
+              "id": "/subscriptions/e7a6cbfe-9250-4f75-a13c-4c3d3f235e0d/resourceGroups/TeamsAutomation-Standard-RG/providers/Microsoft.KeyVault/vaults/pGKTFEzbBmgN7C5uuPyFdSwn"
+            },
+            "secretName": "wdatpSPNSecret"
+          }
+        },
+        "wdatp_1_token:TenantId": {
+          "value": "a6e09f1d-1f05-497b-b499-da099ced752f"
+        },
+        "storageAccountName": {
+            "value": "zr3skhfzdt4fw4nw2vcxe9ac"
+        },
+        "logicAppName": {
+            "value": "hydralogicAppName"
+        },
+        "appinsName": {
+            "value": "hydraAppinsName"
+        },
+        "serverfarmName": {
+            "value": "hydraServerFarmName"
+        },
+        "workspaceName": {
+            "value": "hydraWorkspaceName"
+        },
+        "wdatp_1_token:resourceUri": {
+            "value": "https://api.securitycenter.microsoft.com"
+        },
+        "wdatp_1_token:grantType": {
+            "value": "client_credentials"
+        }
+    }
+}
