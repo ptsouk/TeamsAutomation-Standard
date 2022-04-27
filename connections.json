@@ -1,0 +1,32 @@
+{
+  "managedApiConnections": {
+    "teams": {
+      "api": {
+        "id": "/subscriptions/e7a6cbfe-9250-4f75-a13c-4c3d3f235e0d/providers/Microsoft.Web/locations/westeurope/managedApis/teams"
+      },
+      "connection": {
+        "id": "/subscriptions/e7a6cbfe-9250-4f75-a13c-4c3d3f235e0d/resourceGroups/TeamsAutomation-Standard-RG/providers/Microsoft.Web/connections/teams"
+      },
+      "connectionRuntimeUrl": "https://3fe4afc3390d30b2.14.common.logic-westeurope.azure-apihub.net/apim/teams/7febde4db25949f8b2f36665f955cb2d/",
+      "authentication": {
+        "type": "Raw",
+        "scheme": "Key",
+        "parameter": "@appsetting('teams-connectionKey')"
+      }
+    },
+    "wdatp": {
+      "api": {
+        "id": "/subscriptions/e7a6cbfe-9250-4f75-a13c-4c3d3f235e0d/providers/Microsoft.Web/locations/westeurope/managedApis/wdatp"
+      },
+      "connection": {
+        "id": "/subscriptions/e7a6cbfe-9250-4f75-a13c-4c3d3f235e0d/resourceGroups/TeamsAutomation-Standard-RG/providers/Microsoft.Web/connections/wdatp"
+      },
+      "connectionRuntimeUrl": "https://3fe4afc3390d30b2.14.common.logic-westeurope.azure-apihub.net/apim/wdatp/19f3e708c6ae4ddfba83f23a36906bdb/",
+      "authentication": {
+        "type": "Raw",
+        "scheme": "Key",
+        "parameter": "@appsetting('wdatp-connectionKey')"
+      }
+    }
+  }
+}

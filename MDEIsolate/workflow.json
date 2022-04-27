@@ -1,10 +1,361 @@
 {
-  "definition": {
-    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-    "actions": {},
-    "contentVersion": "1.0.0.0",
-    "outputs": {},
-    "triggers": {}
-  },
-  "kind": "Stateful"
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Condition": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@body('Post_adaptive_card_and_wait_for_a_response')['submitActionId']",
+                                "ecSumitIsolation"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Condition_3": {
+                        "type": "If",
+                        "expression": {
+                            "and": [
+                                {
+                                    "not": {
+                                        "equals": [
+                                            "@body('Post_adaptive_card_and_wait_for_a_response')?['data']?['ecIsolateDeviceInput']",
+                                            "@null"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "actions": {
+                            "Actions_-_Get_list_of_machine_actions": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "wdatp"
+                                        }
+                                    },
+                                    "method": "get",
+                                    "path": "/api/machineactions",
+                                    "queries": {
+                                        "$filter": "machineId eq '@{body('Machines_-_Get_single_machine')?['id']}' and (type eq 'Isolate' or type eq 'Unisolate')",
+                                        "$top": 1
+                                    }
+                                },
+                                "runAfter": {
+                                    "Scope": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Condition_4": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@empty(body('Actions_-_Get_list_of_machine_actions')?['value'])",
+                                                "@true"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Actions_-_Isolate_machine_2": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "wdatp"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "Comment": "Automation - On Demand Isolation with Teams Adaptive Card - Initiated By @{body('Post_adaptive_card_and_wait_for_a_response')?['responder']?['userPrincipalName']}",
+                                                "IsolationType": "Full"
+                                            },
+                                            "path": "/api/machines/@{encodeURIComponent(body('Machines_-_Get_single_machine')?['id'])}/isolate"
+                                        },
+                                        "runAfter": {}
+                                    },
+                                    "Post_message_in_a_chat_or_channel_6": {
+                                        "inputs": {
+                                            "body": {
+                                                "messageBody": "<p>On Demand Unisolation - <span style=\"color: rgb(65,168,95)\">Successful</span><br>\nUnisolated Device: @{body('Machines_-_Get_single_machine')?['computerDnsName']}<br>\nInitiated By: @{body('Post_adaptive_card_and_wait_for_a_response')?['responder']?['userPrincipalName']}</p>",
+                                                "recipient": {
+                                                    "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                                    "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                                }
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "teams"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                                        },
+                                        "runAfter": {
+                                            "Actions_-_Isolate_machine_2": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "ApiConnection"
+                                    }
+                                },
+                                "runAfter": {
+                                    "Actions_-_Get_list_of_machine_actions": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "else": {
+                                    "actions": {
+                                        "For_each_2": {
+                                            "type": "Foreach",
+                                            "foreach": "@body('Actions_-_Get_list_of_machine_actions')?['value']",
+                                            "actions": {
+                                                "Condition_5": {
+                                                    "type": "If",
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@items('For_each_2')?['type']",
+                                                                    "Isolate"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "actions": {
+                                                        "Post_message_in_a_chat_or_channel_2": {
+                                                            "inputs": {
+                                                                "body": {
+                                                                    "messageBody": "<p><span style=\"color: rgb(251,160,38)\">Device with Computer Name </span><span style=\"color: rgb(251,160,38)\">@{body('Machines_-_Get_single_machine')?['computerDnsName']}</span><span style=\"color: rgb(251,160,38)\"> is already Isolated. Exiting.</span></p>",
+                                                                    "recipient": {
+                                                                        "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                                                        "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                                                    }
+                                                                },
+                                                                "host": {
+                                                                    "connection": {
+                                                                        "referenceName": "teams"
+                                                                    }
+                                                                },
+                                                                "method": "post",
+                                                                "path": "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                                                            },
+                                                            "runAfter": {},
+                                                            "type": "ApiConnection"
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "else": {
+                                                        "actions": {
+                                                            "Actions_-_Isolate_machine_3": {
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "referenceName": "wdatp"
+                                                                        }
+                                                                    },
+                                                                    "method": "post",
+                                                                    "body": {
+                                                                        "Comment": "Automation - On Demand Isolation with Teams Adaptive Card - Initiated By @{body('Post_adaptive_card_and_wait_for_a_response')?['responder']?['userPrincipalName']}",
+                                                                        "IsolationType": "Full"
+                                                                    },
+                                                                    "path": "/api/machines/@{encodeURIComponent(body('Machines_-_Get_single_machine')?['id'])}/isolate"
+                                                                },
+                                                                "runAfter": {}
+                                                            },
+                                                            "Post_message_in_a_chat_or_channel_5": {
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "messageBody": "<p>On Demand Isolation - <span style=\"color: rgb(65,168,95)\">Successful</span><br>\nIsolated Device: @{body('Machines_-_Get_single_machine')?['computerDnsName']}<br>\nInitiated By: @{body('Post_adaptive_card_and_wait_for_a_response')?['responder']?['userPrincipalName']}</p>",
+                                                                        "recipient": {
+                                                                            "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                                                            "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                                                        }
+                                                                    },
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "referenceName": "teams"
+                                                                        }
+                                                                    },
+                                                                    "method": "post",
+                                                                    "path": "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                                                                },
+                                                                "runAfter": {
+                                                                    "Actions_-_Isolate_machine_3": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "ApiConnection"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {}
+                                        }
+                                    }
+                                }
+                            },
+                            "Post_message_in_a_chat_or_channel_4": {
+                                "inputs": {
+                                    "body": {
+                                        "messageBody": "<p><span style=\"color: rgb(226,80,65)\">Unable to Get Device Info for Device: </span><span style=\"color: rgb(226,80,65)\">@{body('Post_adaptive_card_and_wait_for_a_response')?['data']?['ecIsolateDeviceInput']}</span><span style=\"color: rgb(226,80,65)\">. Isolation Discarded</span></p>",
+                                        "recipient": {
+                                            "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                            "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                        }
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "teams"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+                                },
+                                "runAfter": {
+                                    "Scope": [
+                                        "TimedOut",
+                                        "Skipped",
+                                        "Failed"
+                                    ]
+                                },
+                                "type": "ApiConnection"
+                            },
+                            "Scope": {
+                                "type": "Scope",
+                                "actions": {
+                                    "Machines_-_Get_single_machine": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "wdatp"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/api/machines/@{encodeURIComponent(body('Post_adaptive_card_and_wait_for_a_response')?['data']?['ecIsolateDeviceInput'])}"
+                                        },
+                                        "runAfter": {}
+                                    }
+                                },
+                                "runAfter": {}
+                            }
+                        },
+                        "runAfter": {},
+                        "else": {
+                            "actions": {
+                                "Post_message_in_a_chat_or_channel_3": {
+                                    "inputs": {
+                                        "body": {
+                                            "messageBody": "<p><span style=\"color: rgb(226,80,65)\">No Device Input. Exiting.</span></p>",
+                                            "recipient": {
+                                                "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                                "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                            }
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "referenceName": "teams"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+                                    },
+                                    "runAfter": {},
+                                    "type": "ApiConnection"
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Post_adaptive_card_and_wait_for_a_response": [
+                        "Succeeded"
+                    ]
+                },
+                "else": {
+                    "actions": {
+                        "Post_message_in_a_chat_or_channel": {
+                            "inputs": {
+                                "body": {
+                                    "messageBody": "<p><span style=\"color: rgb(226,80,65)\">Isolation Discarded. Exiting.</span></p>",
+                                    "recipient": {
+                                        "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                        "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "referenceName": "teams"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+                            },
+                            "runAfter": {},
+                            "type": "ApiConnection"
+                        }
+                    }
+                }
+            },
+            "Post_adaptive_card_and_wait_for_a_response": {
+                "inputs": {
+                    "body": {
+                        "body": {
+                            "messageBody": "{\n    \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n    \"body\": [\n        {\n            \"size\": \"Large\",\n            \"text\": \"Isolate Device on demand with MDE\",\n            \"type\": \"TextBlock\",\n            \"weight\": \"Bolder\"\n        },\n        {\n            \"type\": \"Image\",\n            \"url\": \"https://stasecbotprodwe001.blob.core.windows.net/images/TeamsAdaptiveActionIsolate.png\"\n        },\n        {\n            \"size\": \"Large\",\n            \"spacing\": \"Large\",\n            \"type\": \"TextBlock\",\n            \"weight\": \"Bolder\",\n            \"text\": \"Device to isolate\"\n        },\n        {\n            \"type\": \"Input.Text\",\n            \"placeholder\": \"host to isolate\",\n            \"id\": \"ecIsolateDeviceInput\"\n        },\n        {\n            \"type\": \"ActionSet\",\n            \"actions\": [\n                {\n                    \"type\": \"Action.Submit\",\n                    \"title\": \"Submit Isolation\",\n                    \"id\": \"ecSumitIsolation\"\n                }\n            ]\n        },\n        {\n            \"type\": \"ActionSet\",\n            \"actions\": [\n                {\n                    \"type\": \"Action.Submit\",\n                    \"title\": \"Discard Isolation\",\n                    \"style\": \"destructive\",\n                    \"id\": \"ecDiscardIsolation\"\n                }\n            ]\n        }\n    ],\n    \"type\": \"AdaptiveCard\",\n    \"version\": \"1.2\"\n}",
+                            "recipient": {
+                                "channelId": "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2",
+                                "groupId": "737c418f-29ab-4ac4-854d-09fadc703619"
+                            },
+                            "updateMessage": "Processing request."
+                        },
+                        "notificationUrl": "@{listCallbackUrl()}"
+                    },
+                    "host": {
+                        "connection": {
+                            "referenceName": "teams"
+                        }
+                    },
+                    "path": "/v1.0/teams/conversation/gatherinput/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}/$subscriptions"
+                },
+                "runAfter": {},
+                "type": "ApiConnectionWebhook"
+            }
+        },
+        "triggers": {
+            "When_keywords_are_mentioned": {
+                "inputs": {
+                    "body": {
+                        "channels": [
+                            "19:f82348a9a16144e3a7c3222bc3c69b98@thread.tacv2"
+                        ],
+                        "groupId": "737c418f-29ab-4ac4-854d-09fadc703619",
+                        "notificationUrl": "@{listCallbackUrl()}"
+                    },
+                    "host": {
+                        "connection": {
+                            "referenceName": "teams"
+                        }
+                    },
+                    "path": "/beta/subscriptions/keywordtrigger/threadType/@{encodeURIComponent('channel')}",
+                    "queries": {
+                        "$search": "MDEIsolate"
+                    }
+                },
+                "type": "ApiConnectionWebhook"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {}
+    },
+    "kind": "Stateful"
 }
