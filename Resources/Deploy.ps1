@@ -1,0 +1,1 @@
+New-AzResourceGroupDeployment -Name hydraDeploy -ResourceGroupName TeamsAutomation-Standard-RG -DeploymentDebugLogLevel All -TemplateFile .\Resources\template.json -TemplateParameterFile .\Resources\parameters.json -Verbose
